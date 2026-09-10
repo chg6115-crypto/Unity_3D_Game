@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,17 +10,20 @@ public class PlayerController : MonoBehaviour
 
     public float moveSpeed = 5f;
 
-    // 플레이어가 이동 범위
+    // 플레이어 이동 범위
     private readonly float minX = -3f;
     private readonly float maxX = 3f;
 
     private readonly float minZ = -8f;
     private readonly float maxZ = 6f;
 
+
     // =========================
-    // 총알 발사
+    // 일반 총알 발사
+    // =========================
+
+    // 일반 총알 발사 위치
     public Transform firePoint;
-    // =========================
 
     // 발사할 총알 프리팹
     public GameObject BulletPrefab;
@@ -29,6 +33,8 @@ public class PlayerController : MonoBehaviour
 
     // 다음 발사 가능 시간
     private float nextFireTime = 0f;
+
+
     // =========================
     // 특수 공격
     // =========================
@@ -39,11 +45,17 @@ public class PlayerController : MonoBehaviour
     // 특수공격 발사 위치
     public Transform specialFirePoint;
 
-    // 현재 점수
-    private int score = 0;
+    // 현재 특수공격 게이지
+    private int specialGauge = 0;
+
+    // 특수공격 최대 게이지
+    private readonly int maxSpecialGauge = 3;
 
     // 특수공격 사용 가능 여부
     private bool specialReady = false;
+
+    // 특수미사일 게이지 UI
+    public Slider specialGaugeSlider;
 
     // =========================
     // 플레이어 체력
@@ -68,6 +80,8 @@ public class PlayerController : MonoBehaviour
     {
         // 게임 시작 시 현재 체력을 최대 체력으로 설정
         currentHP = maxHP;
+        specialGaugeSlider.maxValue = maxSpecialGauge;
+        specialGaugeSlider.value = specialGauge;
     }
 
 
@@ -124,9 +138,16 @@ public class PlayerController : MonoBehaviour
         transform.position +=
             movement * moveSpeed * Time.deltaTime;
 
-        // 화면 밖으로 못 나가게 제한
-        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
-        float clampedZ = Mathf.Clamp(transform.position.z, minZ, maxZ);
+
+        // =========================
+        // 이동 범위 제한
+        // =========================
+
+        float clampedX =
+            Mathf.Clamp(transform.position.x, minX, maxX);
+
+        float clampedZ =
+            Mathf.Clamp(transform.position.z, minZ, maxZ);
 
         transform.position = new Vector3(
             clampedX,
@@ -134,26 +155,31 @@ public class PlayerController : MonoBehaviour
             clampedZ
         );
 
+
         // =========================
-        // 총알 발사
+        // 일반 총알 발사
         // =========================
 
-        if (Keyboard.current.spaceKey.isPressed &&
+        if (Keyboard.current.jKey.isPressed &&
             Time.time >= nextFireTime)
         {
             Instantiate(
-               BulletPrefab,
-               firePoint.position,
-               firePoint.rotation
+                BulletPrefab,
+                firePoint.position,
+                firePoint.rotation
             );
 
             nextFireTime = Time.time + fireRate;
         }
+
+
         // =========================
         // 특수 공격
         // =========================
 
-        if (Keyboard.current.leftShiftKey.wasPressedThisFrame
+        // Left Shift를 눌렀고
+        // 특수 게이지가 모두 찬 상태일 때만 발사
+        if (Keyboard.current.kKey.wasPressedThisFrame
             && specialReady)
         {
             FireSpecial();
@@ -193,18 +219,35 @@ public class PlayerController : MonoBehaviour
         // 플레이어 비활성화
         gameObject.SetActive(false);
     }
+
+
     // =========================
-    // 점수 획득
+    // 특수 게이지 획득
     // =========================
 
     public void AddScore(int amount)
     {
-        score += amount;
+        specialGauge += amount;
 
-        Debug.Log("Score : " + score);
+        // 게이지는 최대 3까지만 올라감
+        specialGauge =
+            Mathf.Clamp(
+                specialGauge,
+                0,
+                maxSpecialGauge
+            );
+        // UI 게이지 갱신
+        specialGaugeSlider.value = specialGauge;
 
-        // 점수가 3점 이상이면 특수공격 사용 가능
-        if (score >= 3)
+        Debug.Log(
+            "Special Gauge : "
+            + specialGauge
+            + " / "
+            + maxSpecialGauge
+        );
+
+        // 게이지가 최대치에 도달하면 특수공격 사용 가능
+        if (specialGauge == maxSpecialGauge)
         {
             specialReady = true;
 
@@ -219,18 +262,29 @@ public class PlayerController : MonoBehaviour
 
     void FireSpecial()
     {
+        // 특수 미사일 생성
         Instantiate(
             specialMissilePrefab,
             specialFirePoint.position,
             specialFirePoint.rotation
         );
 
-        // 점수 3점 소비
-        score -= 3;
+        // 특수공격 사용 후 게이지를 0으로 초기화
+        specialGauge = 0;
 
-        // 다시 충전 필요
+        // 게이지 UI도 0으로 갱신
+        specialGaugeSlider.value = specialGauge;
+
+        // 다시 게이지를 채우기 전까지 특수공격 사용 불가
         specialReady = false;
 
         Debug.Log("SPECIAL FIRE");
+
+        Debug.Log(
+            "Special Gauge : "
+            + specialGauge
+            + " / "
+            + maxSpecialGauge
+        );
     }
 }

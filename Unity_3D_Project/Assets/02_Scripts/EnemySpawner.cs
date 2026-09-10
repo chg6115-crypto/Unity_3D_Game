@@ -1,8 +1,10 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EnemySpawner : MonoBehaviour
 {
-    // =========================
+    // 보스 체력바 UI
+    public Slider bossHPSlider;
     // 승리 UI
     // =========================
 
@@ -89,8 +91,10 @@ public class EnemySpawner : MonoBehaviour
 
     void Start()
     {
-        // 시작할 때 현재 체력을 최대 체력으로 설정
         currentHP = maxHP;
+
+        bossHPSlider.maxValue = maxHP;
+        bossHPSlider.value = currentHP;
     }
 
 
