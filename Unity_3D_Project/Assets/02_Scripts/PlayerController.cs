@@ -9,9 +9,16 @@ public class PlayerController : MonoBehaviour
 
     public float moveSpeed = 5f;
 
+    // 플레이어가 이동 범위
+    private readonly float minX = -3f;
+    private readonly float maxX = 3f;
+
+    private readonly float minZ = -8f;
+    private readonly float maxZ = 6f;
 
     // =========================
     // 총알 발사
+    public Transform firePoint;
     // =========================
 
     // 발사할 총알 프리팹
@@ -22,7 +29,21 @@ public class PlayerController : MonoBehaviour
 
     // 다음 발사 가능 시간
     private float nextFireTime = 0f;
+    // =========================
+    // 특수 공격
+    // =========================
 
+    // 특수공격에 사용할 미사일 프리팹
+    public GameObject specialMissilePrefab;
+
+    // 특수공격 발사 위치
+    public Transform specialFirePoint;
+
+    // 현재 점수
+    private int score = 0;
+
+    // 특수공격 사용 가능 여부
+    private bool specialReady = false;
 
     // =========================
     // 플레이어 체력
@@ -103,6 +124,15 @@ public class PlayerController : MonoBehaviour
         transform.position +=
             movement * moveSpeed * Time.deltaTime;
 
+        // 화면 밖으로 못 나가게 제한
+        float clampedX = Mathf.Clamp(transform.position.x, minX, maxX);
+        float clampedZ = Mathf.Clamp(transform.position.z, minZ, maxZ);
+
+        transform.position = new Vector3(
+            clampedX,
+            transform.position.y,
+            clampedZ
+        );
 
         // =========================
         // 총알 발사
@@ -112,12 +142,21 @@ public class PlayerController : MonoBehaviour
             Time.time >= nextFireTime)
         {
             Instantiate(
-                BulletPrefab,
-                transform.position,
-                transform.rotation
+               BulletPrefab,
+               firePoint.position,
+               firePoint.rotation
             );
 
             nextFireTime = Time.time + fireRate;
+        }
+        // =========================
+        // 특수 공격
+        // =========================
+
+        if (Keyboard.current.leftShiftKey.wasPressedThisFrame
+            && specialReady)
+        {
+            FireSpecial();
         }
     }
 
@@ -153,5 +192,45 @@ public class PlayerController : MonoBehaviour
 
         // 플레이어 비활성화
         gameObject.SetActive(false);
+    }
+    // =========================
+    // 점수 획득
+    // =========================
+
+    public void AddScore(int amount)
+    {
+        score += amount;
+
+        Debug.Log("Score : " + score);
+
+        // 점수가 3점 이상이면 특수공격 사용 가능
+        if (score >= 3)
+        {
+            specialReady = true;
+
+            Debug.Log("SPECIAL READY");
+        }
+    }
+
+
+    // =========================
+    // 특수 공격 발사
+    // =========================
+
+    void FireSpecial()
+    {
+        Instantiate(
+            specialMissilePrefab,
+            specialFirePoint.position,
+            specialFirePoint.rotation
+        );
+
+        // 점수 3점 소비
+        score -= 3;
+
+        // 다시 충전 필요
+        specialReady = false;
+
+        Debug.Log("SPECIAL FIRE");
     }
 }

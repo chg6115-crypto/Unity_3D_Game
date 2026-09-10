@@ -11,43 +11,65 @@ public class BulletController : MonoBehaviour
     // 총알 수명
     public float lifeTime = 3f;
 
-    // 이미 적에게 맞았는지 확인
+    // 이미 충돌했는지 확인
     private bool hasHit = false;
+
 
     void Start()
     {
+        // 일정 시간이 지나면 총알 자동 삭제
         Destroy(gameObject, lifeTime);
     }
 
+
     void Update()
     {
-        transform.position += transform.forward * bulletSpeed * Time.deltaTime;
+        // 총알을 앞쪽으로 이동
+        transform.position +=
+            transform.forward * bulletSpeed * Time.deltaTime;
     }
+
 
     void OnTriggerEnter(Collider other)
     {
-        // 이미 한 번 충돌 처리했다면 아무것도 하지 않음
+        Debug.Log("총알 충돌 : " + other.gameObject.name);
+
+        // 플레이어와의 충돌은 무시
+        PlayerController player =
+            other.GetComponentInParent<PlayerController>();
+
+        if (player != null)
+        {
+            return;
+        }
+
+
+        // 이미 다른 오브젝트를 맞았다면 무시
         if (hasHit)
         {
             return;
         }
 
-        EnemyController enemy = other.GetComponent<EnemyController>();
+
+        // 일반 적과 충돌
+        EnemyController enemy =
+            other.GetComponentInParent<EnemyController>();
 
         if (enemy != null)
         {
-            // 이 총알은 이미 적을 맞았다고 기록
             hasHit = true;
 
-            // 적에게 데미지
             enemy.TakeDamage(damage);
 
-            // 총알 삭제
             Destroy(gameObject);
+
+            return;
         }
-        // Spawner 공격
-        SpawnerController spawner =
-            other.GetComponent<SpawnerController>();
+
+
+        // EnemySpawner와 충돌
+        EnemySpawner spawner =
+            other.GetComponentInParent<EnemySpawner>();
 
         if (spawner != null)
         {
@@ -56,6 +78,8 @@ public class BulletController : MonoBehaviour
             spawner.TakeDamage(damage);
 
             Destroy(gameObject);
+
+            return;
         }
     }
 }

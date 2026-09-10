@@ -47,8 +47,19 @@ public class EnemyController : MonoBehaviour
         Debug.Log("Enemy HP : " + currentHP);
 
         // 체력이 0 이하가 되면 적 삭제
+        // 체력이 0 이하가 되면 적 삭제
+        // 체력이 0 이하가 되면 적 삭제
         if (currentHP <= 0)
         {
+            PlayerController player =
+                FindAnyObjectByType<PlayerController>();
+
+            if (player != null)
+            {
+                // 적 1마리 처치 → 점수 1점 획득
+                player.AddScore(1);
+            }
+
             Destroy(gameObject);
         }
     }
