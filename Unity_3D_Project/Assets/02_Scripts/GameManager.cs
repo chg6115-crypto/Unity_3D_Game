@@ -3,49 +3,75 @@ using UnityEngine.InputSystem;
 
 public class GameManager : MonoBehaviour
 {
-    // 시작 화면 전체
     public GameObject startPanel;
 
     // 게임 시작 여부
-    private bool gameStarted = false;
+    public bool gameStarted = false;
 
+    // 게임 시작 직후 입력 잠금 시간
+    public float inputDelay = 0.3f;
+
+    // 실제 입력이 가능해지는 시간
+    private float inputEnableTime;
 
     void Start()
     {
-        // 시작 화면 보이기
         startPanel.SetActive(true);
 
-        // 게임 일시정지
+        // 시작 화면에서는 게임 정지
         Time.timeScale = 0f;
     }
 
-
     void Update()
     {
-        // 이미 게임이 시작됐으면 아무것도 안 함
-        if (gameStarted)
+        // 아직 게임이 시작되지 않았다면
+        if (!gameStarted)
         {
+            if (Keyboard.current.anyKey.wasPressedThisFrame)
+            {
+                StartGame();
+            }
+
             return;
         }
 
-        // 아무 키나 눌렀을 때
-        if (Keyboard.current.anyKey.wasPressedThisFrame)
+        // ESC로 게임 종료
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            StartGame();
+            QuitGame();
         }
     }
-
 
     void StartGame()
     {
         gameStarted = true;
 
-        // 시작 화면 숨기기
         startPanel.SetActive(false);
 
-        // 게임 다시 진행
         Time.timeScale = 1f;
 
+        // 게임 시작 후 0.3초 뒤부터 입력 허용
+        inputEnableTime =
+            Time.unscaledTime + inputDelay;
+
         Debug.Log("GAME START");
+    }
+
+    public bool CanPlayerInput()
+    {
+        return
+            gameStarted &&
+            Time.unscaledTime >= inputEnableTime;
+    }
+
+    void QuitGame()
+    {
+        Debug.Log("GAME QUIT");
+
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+    Application.Quit();
+#endif
     }
 }

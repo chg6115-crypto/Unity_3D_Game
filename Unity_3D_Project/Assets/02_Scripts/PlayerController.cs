@@ -2,8 +2,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+
 public class PlayerController : MonoBehaviour
 {
+    private GameManager gameManager;
+
     // =========================
     // 플레이어 이동
     // =========================
@@ -82,7 +85,10 @@ public class PlayerController : MonoBehaviour
 
 
     void Start()
+
     {
+        gameManager = FindAnyObjectByType<GameManager>();
+
         // 게임 시작 시 현재 체력을 최대 체력으로 설정
         currentHP = maxHP;
 
@@ -97,6 +103,12 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        if (gameManager != null &&
+    !gameManager.CanPlayerInput())
+        {
+            return;
+        }
+
         // =========================
         // 이동 입력
         // =========================
