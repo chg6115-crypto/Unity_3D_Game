@@ -28,10 +28,23 @@ public class EnemyController : MonoBehaviour
     }
 
 
+    // =========================
+    // 적 자동 삭제 (화면 밖으로 나가면)
+    // =========================
+
+    // 이 Z 좌표보다 작아지면(플레이어를 지나쳐버리면) 삭제
+    public float destroyZ = -10f;
+
     void Update()
     {
         // 적을 -Z 방향으로 계속 이동
         transform.position += Vector3.back * moveSpeed * Time.deltaTime;
+
+        // 플레이어를 지나쳐서 일정 지점을 넘어가면 삭제
+        if (transform.position.z < destroyZ)
+        {
+            Destroy(gameObject);
+        }
     }
 
 
