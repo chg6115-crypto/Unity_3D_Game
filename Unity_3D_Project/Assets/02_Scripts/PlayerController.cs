@@ -57,6 +57,7 @@ public class PlayerController : MonoBehaviour
     // 특수미사일 게이지 UI
     public Slider specialGaugeSlider;
 
+
     // =========================
     // 플레이어 체력
     // =========================
@@ -66,6 +67,10 @@ public class PlayerController : MonoBehaviour
 
     // 현재 체력
     private int currentHP;
+
+    // 플레이어 HP 아이콘 UI
+    // HP01 ~ HP05를 연결
+    public Image[] playerHPImages;
 
 
     // =========================
@@ -80,6 +85,11 @@ public class PlayerController : MonoBehaviour
     {
         // 게임 시작 시 현재 체력을 최대 체력으로 설정
         currentHP = maxHP;
+
+        // 플레이어 HP UI 갱신
+        UpdatePlayerHPUI();
+
+        // 특수 게이지 설정
         specialGaugeSlider.maxValue = maxSpecialGauge;
         specialGaugeSlider.value = specialGauge;
     }
@@ -177,8 +187,6 @@ public class PlayerController : MonoBehaviour
         // 특수 공격
         // =========================
 
-        // Left Shift를 눌렀고
-        // 특수 게이지가 모두 찬 상태일 때만 발사
         if (Keyboard.current.kKey.wasPressedThisFrame
             && specialReady)
         {
@@ -195,12 +203,64 @@ public class PlayerController : MonoBehaviour
     {
         currentHP -= damage;
 
+        // HP가 0보다 작아지지 않도록 제한
+        currentHP = Mathf.Clamp(
+            currentHP,
+            0,
+            maxHP
+        );
+
+        // HP UI 갱신
+        UpdatePlayerHPUI();
+
         Debug.Log("Player HP : " + currentHP);
 
         // 체력이 0 이하라면 게임오버
         if (currentHP <= 0)
         {
             GameOver();
+        }
+    }
+
+
+    // =========================
+    // 플레이어 회복
+    // =========================
+
+    public void Heal(int amount)
+    {
+        currentHP += amount;
+
+        // 최대 체력을 넘지 않도록 제한
+        currentHP = Mathf.Clamp(
+            currentHP,
+            0,
+            maxHP
+        );
+
+        // HP UI 갱신
+        UpdatePlayerHPUI();
+
+        Debug.Log("Player HP : " + currentHP);
+    }
+
+
+    // =========================
+    // 플레이어 HP UI 갱신
+    // =========================
+
+    void UpdatePlayerHPUI()
+    {
+        for (int i = 0; i < playerHPImages.Length; i++)
+        {
+            if (i < currentHP)
+            {
+                playerHPImages[i].enabled = true;
+            }
+            else
+            {
+                playerHPImages[i].enabled = false;
+            }
         }
     }
 
@@ -236,6 +296,7 @@ public class PlayerController : MonoBehaviour
                 0,
                 maxSpecialGauge
             );
+
         // UI 게이지 갱신
         specialGaugeSlider.value = specialGauge;
 
